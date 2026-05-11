@@ -1,0 +1,10 @@
+{
+  "id": "odaily-home",
+  "name": "Odaily Home",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Show an Odaily default page when opening a new tab.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

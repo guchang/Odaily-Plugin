@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Odaily Home Preview</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #111;
+        color: #222426;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .preview {
+        display: grid;
+        grid-template-columns: repeat(2, 628px);
+        gap: 28px;
+        min-height: 100vh;
+        padding: 28px;
+      }
+
+      .preview__frame {
+        width: 628px;
+        height: 796px;
+        overflow: hidden;
+        border-radius: 2px;
+      }
+
+      .preview__frame .odaily-home {
+        width: 100%;
+        height: 100%;
+      }
+
+      .preview__frame .odaily-home__shell {
+        padding-top: 44px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="preview">
+      <section class="preview__frame theme-light" aria-label="Light preview">
+        <div class="odaily-home">
+          <div class="odaily-home__shell">
+            <div class="odaily-home__header">
+              <h1>创建</h1>
+            </div>
+            <div class="odaily-home__actions">
+              <button class="odaily-home__card odaily-home__card--quick-note" type="button">
+                <div class="odaily-home__card-top">
+                  <strong>快速笔记</strong>
+                  <div class="odaily-home__date-badge">
+                    <span class="odaily-home__date-month" data-preview-month></span>
+                    <span class="odaily-home__date-day" data-preview-day></span>
+                  </div>
+                </div>
+                <div class="odaily-home__card-lines"><span></span><span></span><span></span></div>
+              </button>
+              <button class="odaily-home__card odaily-home__card--new-document" type="button">
+                <div class="odaily-home__card-top"><strong>新文档</strong></div>
+                <span class="odaily-home__card-subtitle">你在想什么？</span>
+                <div class="odaily-home__card-lines"><span></span><span></span><span></span></div>
+                <div class="odaily-home__note-patch"><span></span><span></span></div>
+              </button>
+              <button class="odaily-home__card odaily-home__card--todo-list" type="button">
+                <div class="odaily-home__card-top"><strong>待办列表</strong></div>
+                <div class="odaily-home__todo-preview">
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                </div>
+              </button>
+            </div>
+            <button class="odaily-home__search" type="button">
+              <span class="odaily-home__search-icon">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="m20 20-3.5-3.5"></path>
+                </svg>
+              </span>
+              <span>快速开启</span>
+            </button>
+            <div class="odaily-home__recent-panel">
+              <h2>最近打开的文档</h2>
+              <div class="odaily-home__recent-list" data-preview-list></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview__frame theme-dark" aria-label="Dark preview">
+        <div class="odaily-home">
+          <div class="odaily-home__shell">
+            <div class="odaily-home__header">
+              <h1>创建</h1>
+            </div>
+            <div class="odaily-home__actions">
+              <button class="odaily-home__card odaily-home__card--quick-note" type="button">
+                <div class="odaily-home__card-top">
+                  <strong>快速笔记</strong>
+                  <div class="odaily-home__date-badge">
+                    <span class="odaily-home__date-month" data-preview-month></span>
+                    <span class="odaily-home__date-day" data-preview-day></span>
+                  </div>
+                </div>
+                <div class="odaily-home__card-lines"><span></span><span></span><span></span></div>
+              </button>
+              <button class="odaily-home__card odaily-home__card--new-document" type="button">
+                <div class="odaily-home__card-top"><strong>新文档</strong></div>
+                <span class="odaily-home__card-subtitle">你在想什么？</span>
+                <div class="odaily-home__card-lines"><span></span><span></span><span></span></div>
+                <div class="odaily-home__note-patch"><span></span><span></span></div>
+              </button>
+              <button class="odaily-home__card odaily-home__card--todo-list" type="button">
+                <div class="odaily-home__card-top"><strong>待办列表</strong></div>
+                <div class="odaily-home__todo-preview">
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                  <div class="odaily-home__todo-row"><span class="odaily-home__todo-box"></span><span class="odaily-home__wave odaily-home__wave--short"></span><span class="odaily-home__wave"></span></div>
+                </div>
+              </button>
+            </div>
+            <button class="odaily-home__search" type="button">
+              <span class="odaily-home__search-icon">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="m20 20-3.5-3.5"></path>
+                </svg>
+              </span>
+              <span>快速开启</span>
+            </button>
+            <div class="odaily-home__recent-panel">
+              <h2>最近打开的文档</h2>
+              <div class="odaily-home__recent-list" data-preview-list></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const today = new Date();
+      const docs = [
+        ["", "18 分钟前"],
+        ["今天, 5月11日 周一", "1 小时前"],
+        ["5月9日 周六", "1 天前"],
+        ["Craft Handbook 📖", "1 天前"],
+        ["Getting Started 👋", "1 天前"],
+        ["How To Videos 📺", "1 天前"]
+      ];
+
+      document.querySelectorAll("[data-preview-month]").forEach((node) => {
+        node.textContent = `${today.getMonth() + 1}月`;
+      });
+
+      document.querySelectorAll("[data-preview-day]").forEach((node) => {
+        node.textContent = String(today.getDate());
+      });
+
+      document.querySelectorAll("[data-preview-list]").forEach((list) => {
+        docs.forEach(([title, meta], index) => {
+          const item = document.createElement("button");
+          item.className = "odaily-home__recent-item";
+          item.type = "button";
+          item.innerHTML = `
+            <div class="odaily-home__thumb odaily-home__thumb--${index % 4}">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="odaily-home__recent-body">
+              <div class="odaily-home__recent-title">${title}</div>
+              <div class="odaily-home__recent-meta">${meta}</div>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      });
+    </script>
+  </body>
+</html>
