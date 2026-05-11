@@ -141,7 +141,8 @@
 /* ── Glass Card ────────────────────────────────────── */
 
 .odaily-home__card {
-  display: block !important;
+  display: flex !important;
+  flex-direction: column;
   position: relative;
   min-width: 0;
   height: 152px;

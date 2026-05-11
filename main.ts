@@ -289,7 +289,7 @@ class OdailyHomeView extends ItemView {
     });
     this.createActionCard(actionGrid, {
       title: "待办列表",
-      subtitle: "",
+      subtitle: "追踪你的任务",
       variant: "todo-list",
       onClick: () => this.openTodoList()
     });
