@@ -254,8 +254,10 @@ export default class OdailyHomePlugin extends Plugin {
   }
 
   async createRawDocument(): Promise<void> {
-    const folder = "00_raw";
-    await this.app.vault.createFolder(folder).catch(() => undefined);
+    const folder = this.getNewNoteFolder();
+    if (folder) {
+      await this.app.vault.createFolder(folder).catch(() => undefined);
+    }
 
     const basePath = `${folder}/untitled`;
     let filePath = `${basePath}.md`;
@@ -268,6 +270,21 @@ export default class OdailyHomePlugin extends Plugin {
 
     const file = await this.app.vault.create(filePath, "");
     this.openFileSmart(file);
+  }
+
+  getNewNoteFolder(): string {
+    const vault = this.app.vault as typeof this.app.vault & {
+      getConfig(key: string): string | undefined;
+    };
+    const location = vault.getConfig("newFileLocation") ?? "root";
+    if (location === "folder") {
+      return vault.getConfig("newFileFolderPath") ?? "";
+    }
+    if (location === "current") {
+      const active = this.app.workspace.getActiveFile();
+      return active?.parent?.path ?? "";
+    }
+    return "";
   }
 
   getDailyNotePath(date?: Date): { fileName: string; folder: string } {

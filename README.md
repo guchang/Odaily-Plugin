@@ -2,13 +2,13 @@
 
 [中文](README.zh-CN.md)
 
-A Liquid Glass daily dashboard for Obsidian. Replace empty new tabs with a beautiful action center, plus a sidebar for calendar navigation, daily memos, and task management.
+A daily dashboard for Obsidian. Replace empty new tabs with a beautiful action center, plus a sidebar for calendar navigation, daily memos, and task management.
 
 ## Features
 
 ### Home View (New Tab Page)
 - **Quick Note** — opens today's daily note in one click
-- **New Document** — creates an untitled document in `00_raw/`
+- **New Document** — creates an untitled document in the vault's configured new note folder
 - **Todo List** — add tasks to your daily note or a dedicated file
 - **Quick Switcher** — `Cmd/Ctrl+O` style search from the home screen
 - **Recent Files** — shows recently opened or modified notes

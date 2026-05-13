@@ -2,3 +2,5 @@ node_modules/
 .playwright-mcp/
 .playwright-cli/
 .DS_Store
+scripts/deploy.mjs
+main.js
