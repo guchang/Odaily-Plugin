@@ -1,8 +1,12 @@
-# Odaily Home
+# Odaily
 
 [中文](README.zh-CN.md)
 
-A daily dashboard for Obsidian. Replace empty new tabs with a beautiful action center, plus a sidebar for calendar navigation, daily memos, and task management.
+A schedule-focused Obsidian plugin for capturing ideas, managing notes and tasks, and boosting personal productivity.
+
+## Screenshots
+
+![Home View](screenshots/home_view.png)
 
 ## Features
 
@@ -34,10 +38,6 @@ A daily dashboard for Obsidian. Replace empty new tabs with a beautiful action c
 - **Task Tags**: Filter the sidebar task list to show only tasks matching specific tags.
 - **Todo File**: Choose where new tasks are saved (leave empty to use daily notes).
 - **Todo Position**: Append new tasks to the top or bottom of the target file.
-
-## Screenshots
-
-![Home View](screenshots/home_view.png)
 
 ## Installation
 
