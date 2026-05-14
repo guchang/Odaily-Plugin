@@ -750,7 +750,7 @@ class OdailyHomeView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("odaily-home");
     this.contentEl.removeClass("odaily-home--with-background");
-    this.contentEl.setCssProps({});
+    this.contentEl.setCssProps({ background: "", backgroundSize: "", backgroundPosition: "" });
 
     const isDark = activeDocument.body.hasClass("theme-dark");
     const bg = isDark
