@@ -1,5 +1,6 @@
 import {
   ItemView,
+  MarkdownView,
   Modal,
   Notice,
   Plugin,
@@ -8,6 +9,7 @@ import {
   Setting,
   TFile,
   WorkspaceLeaf,
+  getLanguage,
   setIcon
 } from "obsidian";
 
@@ -35,21 +37,31 @@ const REMINDERS_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
   <path fill="#c7c7cc" fill-rule="evenodd" d="M44 29h60a.94477.94477 0 0 1 1 1h0a.94477.94477 0 0 1-1 1H44a.94477.94477 0 0 1-1-1h0A1.07539 1.07539 0 0 1 44 29ZM44 59h60a.94477.94477 0 0 1 1 1h0a.94477.94477 0 0 1-1 1H44a.94477.94477 0 0 1-1-1h0A1.07539 1.07539 0 0 1 44 59zM44 89h60a.94477.94477 0 0 1 1 1h0a.94477.94477 0 0 1-1 1H44a.94477.94477 0 0 1-1-1h0A1.07539 1.07539 0 0 1 44 89z"/>
 </svg>`;
 
+// ── SVG Helper ──────────────────────────────────
+
+function appendSvg(parent: HTMLElement, svgString: string): void {
+  const doc = new DOMParser().parseFromString(svgString, "image/svg+xml");
+  const svg = doc.documentElement;
+  if (svg) parent.appendChild(activeDocument.adoptNode(svg));
+}
+
 // ── i18n ────────────────────────────────────────
 
+let _isZh = false;
+
 function isZh(): boolean {
-  const lang = localStorage.getItem("language") || navigator.language || "en";
-  return lang.startsWith("zh");
+  return _isZh;
 }
 
 const S: Record<string, string> = {};
 
 function initLocale(): void {
-  const z = isZh();
+  _isZh = getLanguage().startsWith("zh");
+  const z = _isZh;
   S["cmd.openHome"] = z ? "打开 Odaily 主页" : "Open Odaily home";
   S["cmd.openSidebar"] = z ? "打开 Odaily 侧边栏" : "Open Odaily sidebar";
-  S["cmd.addMemo"] = z ? "Odaily: 新增想法" : "Odaily: add memo";
-  S["cmd.addTodo"] = z ? "Odaily: 新增待办" : "Odaily: add todo";
+  S["cmd.addMemo"] = z ? "Odaily: add memo" : "Odaily: add memo";
+  S["cmd.addTodo"] = z ? "Odaily: add todo" : "Odaily: add todo";
   S["home.create"] = z ? "我的空间" : "My Space";
   S["home.quickNote"] = z ? "今日想法" : "Daily Memo";
   S["home.quickNoteSub"] = z ? "捕捉瞬时灵感" : "Capture";
@@ -159,6 +171,7 @@ const doneTodayTitle = (): string => isZh() ? "今日完成" : "Done Today";
 interface ObsidianCommandManager {
   findCommand(id: string): unknown;
   executeCommandById(id: string): boolean;
+  commands?: Record<string, { id: string; name: string }>;
 }
 
 interface OdailySettings {
@@ -196,25 +209,25 @@ export default class OdailyHomePlugin extends Plugin {
     );
 
     this.addCommand({
-      id: "open-odaily-home",
+      id: "open-home",
       name: t("cmd.openHome"),
       callback: () => this.openHomeInNewTab()
     });
 
     this.addCommand({
-      id: "open-odaily-sidebar",
+      id: "open-sidebar",
       name: t("cmd.openSidebar"),
       callback: () => this.openSidebar()
     });
 
     this.addCommand({
-      id: "odaily-add-memo",
+      id: "add-memo",
       name: t("cmd.addMemo"),
       callback: () => void this.addMemo()
     });
 
     this.addCommand({
-      id: "odaily-add-todo",
+      id: "add-todo",
       name: t("cmd.addTodo"),
       callback: () => {
         new TodoInputModal(this.app, (text) => {
@@ -238,7 +251,9 @@ export default class OdailyHomePlugin extends Plugin {
     );
 
     this.app.workspace.onLayoutReady(() => {
-      void this.replaceEmptyLeaf(this.app.workspace.activeLeaf);
+      for (const leaf of this.app.workspace.getLeavesOfType(EMPTY_VIEW_TYPE)) {
+        void this.replaceEmptyLeaf(leaf);
+      }
     });
 
     this.addSettingTab(new OdailySettingTab(this.app, this));
@@ -255,7 +270,7 @@ export default class OdailyHomePlugin extends Plugin {
   async openHomeInNewTab(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(OD_VIEW_TYPE)[0];
     if (existing) {
-      this.app.workspace.revealLeaf(existing);
+      void this.app.workspace.revealLeaf(existing);
       return;
     }
     const leaf = this.app.workspace.getLeaf("tab");
@@ -265,7 +280,7 @@ export default class OdailyHomePlugin extends Plugin {
   async openSidebar(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(OD_SIDEBAR_VIEW_TYPE)[0];
     if (existing) {
-      this.app.workspace.revealLeaf(existing);
+      void this.app.workspace.revealLeaf(existing);
       return;
     }
     const leaf = this.app.workspace.getRightLeaf(false);
@@ -276,10 +291,10 @@ export default class OdailyHomePlugin extends Plugin {
 
   openFileSmart(file: TFile): void {
     const openLeaf = this.app.workspace.getLeavesOfType("markdown").find(
-      (l) => (l.view as any).file?.path === file.path
+      (l) => l.view instanceof MarkdownView && l.view.file?.path === file.path
     );
     if (openLeaf) {
-      this.app.workspace.revealLeaf(openLeaf);
+      void this.app.workspace.revealLeaf(openLeaf);
     } else {
       void this.app.workspace.getLeaf("tab").openFile(file);
     }
@@ -354,8 +369,16 @@ export default class OdailyHomePlugin extends Plugin {
   }
 
   private async applyTemplater(file: TFile): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const appPlugins = (this.app as any).plugins?.plugins;
+    const appWithPlugins = this.app as typeof this.app & {
+      plugins?: {
+        plugins?: Record<string, {
+          api?: {
+            parse_template?: (ctx: unknown, content: string) => Promise<string>;
+          };
+        }>;
+      };
+    };
+    const appPlugins = appWithPlugins.plugins?.plugins;
     if (!appPlugins) return;
 
     const templaterPlugin = appPlugins["templater-obsidian"];
@@ -423,7 +446,7 @@ export default class OdailyHomePlugin extends Plugin {
 
     if (dailyNotesPlugin?.enabled && dailyNotesPlugin.instance?.options) {
       const { format = "YYYY-MM-DD", folder = "" } = dailyNotesPlugin.instance.options;
-      const baseName = (window as any).moment(target).format(format);
+      const baseName = (window as unknown as { moment: (d: Date) => { format: (fmt: string) => string } }).moment(target).format(format);
       return {
         fileName: folder ? `${folder}/${baseName}.md` : `${baseName}.md`,
         folder
@@ -451,10 +474,9 @@ export default class OdailyHomePlugin extends Plugin {
   }
 
   findAndExecuteQuickAddCommand(name: string): boolean {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const commandsRecord = (this.app as any).commands?.commands as
-      | Record<string, { id: string; name: string }>
-      | undefined;
+    const commandsRecord = (this.app as typeof this.app & {
+      commands?: ObsidianCommandManager;
+    }).commands?.commands;
     if (!commandsRecord) return false;
 
     const lower = name.toLowerCase();
@@ -513,16 +535,17 @@ export default class OdailyHomePlugin extends Plugin {
     const isToday = target.toDateString() === new Date().toDateString();
     const modalTitle = sectionTitle("memo", target, isToday);
 
-    new MemoInputModal(this.app, modalTitle, async (text) => {
+    new MemoInputModal(this.app, modalTitle, (text) => {
       if (!text.trim()) return;
       const now = new Date();
       const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      const memoLine = `\n#memo ${text.trim()}  ➕ ${ts}`;
-      await this.app.vault.append(file, memoLine);
-      const sidebarLeaf = this.app.workspace.getLeavesOfType(OD_SIDEBAR_VIEW_TYPE)[0];
-      if (sidebarLeaf?.view instanceof OdailySidebarView) {
-        void (sidebarLeaf.view as OdailySidebarView).renderSidebar();
-      }
+      const memoLine = `#memo ${text.trim()}  ➕ ${ts}`;
+      void this.app.vault.append(file, memoLine).then(() => {
+        const sidebarLeaf = this.app.workspace.getLeavesOfType(OD_SIDEBAR_VIEW_TYPE)[0];
+        if (sidebarLeaf?.view instanceof OdailySidebarView) {
+          void sidebarLeaf.view.renderSidebar();
+        }
+      });
     }).open();
   }
 
@@ -572,7 +595,7 @@ export default class OdailyHomePlugin extends Plugin {
 
     const sidebarLeaf = this.app.workspace.getLeavesOfType(OD_SIDEBAR_VIEW_TYPE)[0];
     if (sidebarLeaf?.view instanceof OdailySidebarView) {
-      void (sidebarLeaf.view as OdailySidebarView).renderSidebar();
+      void sidebarLeaf.view.renderSidebar();
     }
   }
 }
@@ -593,46 +616,23 @@ class TodoInputModal extends Modal {
     contentEl.createEl("h3", { text: t("modal.addTodoTitle") });
 
     this.inputEl = contentEl.createEl("input", {
+      cls: "odaily-modal-input",
       attr: { type: "text", placeholder: t("modal.todoPlaceholder") }
     });
-    Object.assign(this.inputEl.style, {
-      width: "100%",
-      padding: "8px 12px",
-      borderRadius: "6px",
-      border: "1px solid var(--background-modifier-border)",
-      background: "var(--background-primary)",
-      color: "var(--text-normal)",
-      fontSize: "14px",
-      outline: "none"
-    });
 
-    const btnRow = contentEl.createDiv();
-    Object.assign(btnRow.style, {
-      display: "flex",
-      justifyContent: "flex-end",
-      gap: "8px",
-      marginTop: "12px"
-    });
+    const btnRow = contentEl.createDiv({ cls: "odaily-modal-btnrow" });
 
-    const cancelBtn = btnRow.createEl("button", { text: t("modal.cancel") });
-    Object.assign(cancelBtn.style, {
-      padding: "6px 14px",
-      borderRadius: "4px",
-      border: "1px solid var(--background-modifier-border)",
-      background: "transparent",
-      color: "var(--text-muted)",
-      cursor: "pointer"
+    const cancelBtn = btnRow.createEl("button", {
+      cls: "odaily-modal-cancel-btn",
+      attr: { type: "button" },
+      text: t("modal.cancel")
     });
     cancelBtn.addEventListener("click", () => this.close());
 
-    const confirmBtn = btnRow.createEl("button", { text: t("modal.save") });
-    Object.assign(confirmBtn.style, {
-      padding: "6px 14px",
-      borderRadius: "4px",
-      border: "none",
-      background: "var(--text-accent)",
-      color: "var(--text-on-accent)",
-      cursor: "pointer"
+    const confirmBtn = btnRow.createEl("button", {
+      cls: "odaily-modal-confirm-btn",
+      attr: { type: "button" },
+      text: t("modal.save")
     });
     confirmBtn.addEventListener("click", () => {
       this.onSubmit(this.inputEl.value);
@@ -641,13 +641,14 @@ class TodoInputModal extends Modal {
 
     this.inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
+        e.preventDefault();
         this.onSubmit(this.inputEl.value);
         this.close();
       }
       if (e.key === "Escape") this.close();
     });
 
-    setTimeout(() => this.inputEl.focus(), 50);
+    window.setTimeout(() => this.inputEl.focus(), 50);
   }
 
   onClose(): void {
@@ -671,40 +672,24 @@ class MemoInputModal extends Modal {
     contentEl.createEl("h3", { text: this.title });
 
     this.inputEl = contentEl.createEl("input", {
-      cls: "odaily-memo-input",
+      cls: "odaily-modal-input",
       attr: { type: "text", placeholder: t("modal.memoPlaceholder") }
     });
-    this.inputEl.style.width = "100%";
-    this.inputEl.style.padding = "8px 12px";
-    this.inputEl.style.borderRadius = "6px";
-    this.inputEl.style.border = "1px solid var(--background-modifier-border)";
-    this.inputEl.style.background = "var(--background-primary)";
-    this.inputEl.style.color = "var(--text-normal)";
-    this.inputEl.style.fontSize = "14px";
-    this.inputEl.style.outline = "none";
 
-    const btnRow = contentEl.createDiv({ cls: "odaily-memo-btnrow" });
-    btnRow.style.display = "flex";
-    btnRow.style.justifyContent = "flex-end";
-    btnRow.style.gap = "8px";
-    btnRow.style.marginTop = "12px";
+    const btnRow = contentEl.createDiv({ cls: "odaily-modal-btnrow" });
 
-    const cancelBtn = btnRow.createEl("button", { text: t("modal.cancel") });
-    cancelBtn.style.padding = "6px 14px";
-    cancelBtn.style.borderRadius = "4px";
-    cancelBtn.style.border = "1px solid var(--background-modifier-border)";
-    cancelBtn.style.background = "transparent";
-    cancelBtn.style.color = "var(--text-muted)";
-    cancelBtn.style.cursor = "pointer";
+    const cancelBtn = btnRow.createEl("button", {
+      cls: "odaily-modal-cancel-btn",
+      attr: { type: "button" },
+      text: t("modal.cancel")
+    });
     cancelBtn.addEventListener("click", () => this.close());
 
-    const confirmBtn = btnRow.createEl("button", { text: t("modal.save") });
-    confirmBtn.style.padding = "6px 14px";
-    confirmBtn.style.borderRadius = "4px";
-    confirmBtn.style.border = "none";
-    confirmBtn.style.background = "var(--text-accent)";
-    confirmBtn.style.color = "var(--text-on-accent)";
-    confirmBtn.style.cursor = "pointer";
+    const confirmBtn = btnRow.createEl("button", {
+      cls: "odaily-modal-confirm-btn",
+      attr: { type: "button" },
+      text: t("modal.save")
+    });
     confirmBtn.addEventListener("click", () => {
       this.onSubmit(this.inputEl.value);
       this.close();
@@ -712,6 +697,7 @@ class MemoInputModal extends Modal {
 
     this.inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
+        e.preventDefault();
         this.onSubmit(this.inputEl.value);
         this.close();
       }
@@ -721,7 +707,7 @@ class MemoInputModal extends Modal {
     });
 
     // Auto-focus
-    setTimeout(() => this.inputEl.focus(), 50);
+    window.setTimeout(() => this.inputEl.focus(), 50);
   }
 
   onClose(): void {
@@ -764,11 +750,9 @@ class OdailyHomeView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("odaily-home");
     this.contentEl.removeClass("odaily-home--with-background");
-    this.contentEl.style.background = "";
-    this.contentEl.style.backgroundSize = "";
-    this.contentEl.style.backgroundPosition = "";
+    this.contentEl.setCssProps({});
 
-    const isDark = document.body.hasClass("theme-dark");
+    const isDark = activeDocument.body.hasClass("theme-dark");
     const bg = isDark
       ? this.plugin.settings.darkBackground
       : this.plugin.settings.lightBackground;
@@ -776,9 +760,11 @@ class OdailyHomeView extends ItemView {
       const resolved = this.resolveBackground(bg);
       if (resolved) {
         this.contentEl.addClass("odaily-home--with-background");
-        this.contentEl.style.background = resolved;
-        this.contentEl.style.backgroundSize = "cover";
-        this.contentEl.style.backgroundPosition = "center";
+        this.contentEl.setCssProps({
+          background: resolved,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        });
       }
     }
 
@@ -885,9 +871,9 @@ class OdailyHomeView extends ItemView {
       badge.createSpan({ cls: "odaily-home__date-month", text: fmtMonth(today) });
       badge.createSpan({ cls: "odaily-home__date-day", text: String(today.getDate()) });
     } else if (options.variant === "new-document") {
-      iconWrap.innerHTML = NOTES_ICON_SVG;
+      appendSvg(iconWrap, NOTES_ICON_SVG);
     } else if (options.variant === "todo-list") {
-      iconWrap.innerHTML = REMINDERS_ICON_SVG;
+      appendSvg(iconWrap, REMINDERS_ICON_SVG);
     }
 
     const titleArea = top.createDiv({ cls: "odaily-home__card-title-area" });
@@ -991,7 +977,7 @@ class OdailyHomeView extends ItemView {
   }
 
   private createBottomBar(): void {
-    const isDark = document.body.hasClass("theme-dark");
+    const isDark = activeDocument.body.hasClass("theme-dark");
     const bottomBar = this.contentEl.createDiv({ cls: "odaily-home__bottom-bar" });
 
     const settingsBtn = bottomBar.createEl("button", {
@@ -1014,10 +1000,12 @@ class OdailyHomeView extends ItemView {
   }
 
   private openSettings(): void {
-    const setting = (this.app as any).setting;
-    setting.open();
+    const appWithSetting = this.app as typeof this.app & {
+      setting?: { open: () => void };
+    };
+    appWithSetting.setting?.open();
     window.setTimeout(() => {
-      const tabs = document.querySelectorAll(".vertical-tab-header-group .vertical-tab-nav-item");
+      const tabs = activeDocument.querySelectorAll(".vertical-tab-header-group .vertical-tab-nav-item");
       for (const tab of tabs) {
         if (tab.textContent?.includes("Odaily")) {
           (tab as HTMLElement).click();
@@ -1028,9 +1016,12 @@ class OdailyHomeView extends ItemView {
   }
 
   private toggleTheme(): void {
-    const isDark = document.body.hasClass("theme-dark");
+    const isDark = activeDocument.body.hasClass("theme-dark");
     const newTheme = isDark ? "moonstone" : "obsidian";
-    (this.app as any).vault.setConfig("theme", newTheme);
+    const vaultWithConfig = this.app.vault as typeof this.app.vault & {
+      setConfig?: (key: string, value: string) => void;
+    };
+    vaultWithConfig.setConfig?.("theme", newTheme);
     window.setTimeout(() => {
       this.render();
     }, 100);
@@ -1050,14 +1041,14 @@ interface TaskInfo {
 function parseTaskTime(text: string, fileMtime: number): number {
   const created = text.match(/➕\s*(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2})?)/);
   if (created) return new Date(created[1].replace(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/, "$1T$2:00")).getTime();
-  const scheduled = text.match(/[📅⏳]\s*(\d{4}-\d{2}-\d{2})/);
+  const scheduled = text.match(/[📅⏳]\s*(\d{4}-\d{2}-\d{2})/u);
   if (scheduled) return new Date(scheduled[1]).getTime();
   return fileMtime;
 }
 
 function parseTags(text: string): string[] {
   const tags: string[] = [];
-  const re = /#([\w一-鿿\-\/]+)/g;
+  const re = /#([\w一-鿿\-/]+)/gu;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     if (!tags.includes(m[1])) tags.push(m[1]);
@@ -1067,8 +1058,8 @@ function parseTags(text: string): string[] {
 
 function cleanTaskText(text: string): string {
   return text
-    .replace(/#[\w一-鿿\-\/]+/g, "")
-    .replace(/[➕✅⏳📅]\s*\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2})?/g, "")
+    .replace(/#[\w一-鿿\-/]+/gu, "")
+    .replace(/[➕✅⏳📅]\s*\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2})?/gu, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -1082,7 +1073,7 @@ function formatTaskTime(ts: number): string {
 // ── Sidebar View ────────────────────────────────
 
 class OdailySidebarView extends ItemView {
-  private pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private pendingTimers = new Map<string, number>();
   private selectedDate: Date = new Date();
   private showMonthPicker = false;
 
@@ -1125,7 +1116,7 @@ class OdailySidebarView extends ItemView {
 
     const body = this.contentEl.createDiv({ cls: "odaily-sidebar__body" });
 
-    this.renderTodayMemos(body);
+    await this.renderTodayMemos(body);
     this.renderTodayDocs(body);
     await this.renderTasks(body);
     await this.renderTodayCompleted(body);
@@ -1422,8 +1413,7 @@ class OdailySidebarView extends ItemView {
       const titleRow = body.createDiv({ cls: "odaily-sidebar__item-title" });
 
       for (const tag of task.tags) {
-        const tagEl = titleRow.createSpan({ cls: "odaily-sidebar__item-tag", text: `#${tag}` });
-        tagEl.style.color = "var(--text-accent)";
+        titleRow.createSpan({ cls: "odaily-sidebar__item-tag", text: `#${tag}` });
       }
       titleRow.createSpan({ text: cleanTaskText(task.text) });
 
@@ -1446,7 +1436,7 @@ class OdailySidebarView extends ItemView {
   ): void {
     const existing = this.pendingTimers.get(key);
     if (existing) {
-      clearTimeout(existing);
+      window.clearTimeout(existing);
       this.pendingTimers.delete(key);
       item.removeClass("odaily-sidebar__item--pending");
       setIcon(box, "square");
@@ -1458,7 +1448,7 @@ class OdailySidebarView extends ItemView {
     setIcon(box, "check-small");
     box.removeClass("odaily-sidebar__item-checkbox--active");
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       this.pendingTimers.delete(key);
       void this.executeCompletion(task, item);
     }, 1000);
@@ -1481,18 +1471,19 @@ class OdailySidebarView extends ItemView {
     await this.app.vault.modify(task.file, lines.join("\n"));
 
     // Collapse and remove item from DOM
-    item.style.transition = "opacity 280ms ease, max-height 280ms ease, margin-top 280ms ease, margin-bottom 280ms ease, padding-top 280ms ease, padding-bottom 280ms ease";
-    item.style.overflow = "hidden";
+    item.addClass("odaily-sidebar__item--completing");
     const height = item.offsetHeight;
-    item.style.maxHeight = height + "px";
-    item.offsetHeight; // force reflow
-    item.style.opacity = "0";
-    item.style.maxHeight = "0";
-    item.style.marginTop = "0";
-    item.style.marginBottom = "0";
-    item.style.paddingTop = "0";
-    item.style.paddingBottom = "0";
-    item.style.pointerEvents = "none";
+    item.setCssProps({ maxHeight: height + "px" });
+    void item.offsetHeight; // force reflow
+    item.setCssProps({
+      maxHeight: "0",
+      opacity: "0",
+      marginTop: "0",
+      marginBottom: "0",
+      paddingTop: "0",
+      paddingBottom: "0",
+      pointerEvents: "none"
+    });
 
     const cleanText = cleanTaskText(task.text.replace(/✅.*$/, "").trim());
     const file = task.file;
@@ -1653,7 +1644,7 @@ class OdailySettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: t("settings.title") });
+    new Setting(containerEl).setName(t("settings.title")).setHeading();
 
     new Setting(containerEl)
       .setName(t("settings.lightBg"))
@@ -1721,9 +1712,7 @@ class OdailySettingTab extends PluginSettingTab {
           })
       );
 
-    const help = containerEl.createDiv({ cls: "setting-item-description" });
-    help.style.marginTop = "24px";
-    help.style.lineHeight = "1.8";
+    const help = containerEl.createDiv({ cls: "setting-item-description odaily-settings-help" });
     help.createEl("b", { text: t("settings.helpTitle") });
     help.createEl("br");
     help.createSpan({ text: t("settings.help1a") });

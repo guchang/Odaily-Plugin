@@ -1199,3 +1199,55 @@
   color: var(--text-faint);
   line-height: 1.3;
 }
+
+/* ── Modal Styles ───────────────────────────────────── */
+
+.odaily-modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+  outline: none;
+}
+
+.odaily-modal-btnrow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.odaily-modal-cancel-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.odaily-modal-confirm-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: none;
+  background: var(--text-accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+}
+
+/* ── Task Completing Animation ──────────────────────── */
+
+.odaily-sidebar__item--completing {
+  overflow: hidden;
+  transition: opacity 280ms ease, max-height 280ms ease, margin-top 280ms ease, margin-bottom 280ms ease, padding-top 280ms ease, padding-bottom 280ms ease;
+}
+
+/* ── Settings Help ──────────────────────────────────── */
+
+.odaily-settings-help {
+  margin-top: 24px;
+  line-height: 1.8;
+}
