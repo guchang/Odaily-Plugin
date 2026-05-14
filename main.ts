@@ -260,7 +260,7 @@ export default class OdailyHomePlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<OdailySettings>);
   }
 
   async saveSettings(): Promise<void> {
@@ -1005,10 +1005,10 @@ class OdailyHomeView extends ItemView {
     };
     appWithSetting.setting?.open();
     window.setTimeout(() => {
-      const tabs = activeDocument.querySelectorAll(".vertical-tab-header-group .vertical-tab-nav-item");
+      const tabs = activeDocument.querySelectorAll<HTMLElement>(".vertical-tab-header-group .vertical-tab-nav-item");
       for (const tab of tabs) {
         if (tab.textContent?.includes("Odaily")) {
-          (tab as HTMLElement).click();
+          tab.click();
           break;
         }
       }
@@ -1497,12 +1497,12 @@ class OdailySidebarView extends ItemView {
 
   private addToTodayCompleted(text: string, file: TFile, completedTs: string): void {
     const dt = doneTodayTitle();
-    const scrollBody = this.contentEl.querySelector(".odaily-sidebar__body") ?? this.contentEl;
-    const sections = scrollBody.querySelectorAll(".odaily-sidebar__section");
+    const scrollBody = this.contentEl.querySelector<HTMLElement>(".odaily-sidebar__body") ?? this.contentEl;
+    const sections = scrollBody.querySelectorAll<HTMLElement>(".odaily-sidebar__section");
     let doneSection: HTMLElement | null = null;
     for (const s of sections) {
       if (s.querySelector("h3")?.textContent === dt) {
-        doneSection = s as HTMLElement;
+        doneSection = s;
         break;
       }
     }
