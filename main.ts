@@ -760,8 +760,11 @@ class OdailyHomeView extends ItemView {
       const resolved = this.resolveBackground(bg);
       if (resolved) {
         this.contentEl.addClass("odaily-home--with-background");
+        const overlay = isDark
+          ? "linear-gradient(180deg, rgba(2,6,22,0.28), rgba(2,6,22,0.46)), linear-gradient(90deg, rgba(2,6,22,0.22), rgba(2,6,22,0.08) 42%, rgba(2,6,22,0.24))"
+          : "linear-gradient(rgba(0,0,0,0.06), rgba(0,0,0,0.06))";
         this.contentEl.setCssProps({
-          background: resolved,
+          background: `${overlay}, ${resolved}`,
           backgroundSize: "cover",
           backgroundPosition: "center"
         });
