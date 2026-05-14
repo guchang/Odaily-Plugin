@@ -70,8 +70,8 @@
   --od-home-glass-hover: rgba(255, 255, 255, 0.16);
   --od-home-card: rgba(18, 28, 72, 0.42);
   --od-home-card-border: rgba(255, 255, 255, 0.22);
-  --od-home-card-shadow: 0 22px 48px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(255, 255, 255, 0.12) inset;
-  --od-home-card-shadow-hover: 0 36px 72px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(255, 255, 255, 0.14) inset;
+  --od-home-card-shadow: 0 22px 48px rgba(0, 0, 0, 0.35);
+  --od-home-card-shadow-hover: 0 36px 72px rgba(0, 0, 0, 0.5);
   --od-home-line: rgba(255, 255, 255, 0.14);
   --od-home-line-strong: rgba(255, 255, 255, 0.22);
   --od-home-note: rgba(255, 255, 255, 0.13);
