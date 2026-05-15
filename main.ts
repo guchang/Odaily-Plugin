@@ -750,7 +750,7 @@ class OdailyHomeView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass("odaily-home");
     this.contentEl.removeClass("odaily-home--with-background");
-    this.contentEl.setCssProps({ background: "", backgroundSize: "", backgroundPosition: "" });
+    this.contentEl.setCssStyles({ background: "", backgroundSize: "", backgroundPosition: "", backgroundRepeat: "" });
 
     const isDark = activeDocument.body.hasClass("theme-dark");
     const bg = isDark
@@ -763,10 +763,11 @@ class OdailyHomeView extends ItemView {
         const overlay = isDark
           ? "linear-gradient(180deg, rgba(2,6,22,0.28), rgba(2,6,22,0.46)), linear-gradient(90deg, rgba(2,6,22,0.22), rgba(2,6,22,0.08) 42%, rgba(2,6,22,0.24))"
           : "linear-gradient(rgba(0,0,0,0.06), rgba(0,0,0,0.06))";
-        this.contentEl.setCssProps({
+        this.contentEl.setCssStyles({
           background: `${overlay}, ${resolved}`,
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         });
       }
     }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7
+
+- Fix background image tiling instead of covering full area
+- Fix background overlay not scrolling with content
+
 ## 0.1.5
 
 - Fix dark mode default background not showing when no custom background is set
