@@ -26,6 +26,8 @@ A schedule-focused Obsidian plugin for capturing ideas, managing notes and tasks
 - **Task Management** — view and complete open tasks with 1-second undo confirmation
 - **Completed Tasks** — see what was finished today with completion timestamps
 - **Tag Filtering** — filter tasks by custom tags (e.g., `#todo`, `#待办`)
+- **Copy Day Summary** — copy the selected day's memos, docs, tasks, and completed items to clipboard
+- **Search** — search and highlight keywords across all sidebar sections
 
 ## Commands
 - `Open Odaily home` — open the home view in a new tab
